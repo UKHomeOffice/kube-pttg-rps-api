@@ -18,6 +18,7 @@ spec:
   template:
     metadata:
       labels:
+        sys: rps
         name: pttg-rps-api
         version: {{.VERSION}}
       annotations:
@@ -77,6 +78,11 @@ spec:
       - name: vault-sidekick
         image: quay.io/ukhomeofficedigital/vault-sidekick:v0.2.0
         imagePullPolicy: Always
+        securityContext:
+           capabilities:
+             drop:
+               - SETUID
+               - SETGID
         resources:
          limits:
           memory: "100Mi"
@@ -106,6 +112,11 @@ spec:
       - name: proxy
         image: quay.io/ukhomeofficedigital/pttg-nginx-proxy:v3.1.3a
         imagePullPolicy: Always
+        securityContext:
+           capabilities:
+             drop:
+               - SETUID
+               - SETGID
         resources:
          limits:
           memory: "100Mi"
@@ -137,6 +148,11 @@ spec:
             containerPort: 10443
       - name: pttg-rps-api
         image: quay.io/ukhomeofficedigital/pttg-rps-api:{{.VERSION}}
+        securityContext:
+           capabilities:
+             drop:
+               - SETUID
+               - SETGID
         env:
           - name: JAVA_OPTS
             value: '-Xms150m -Xmx250m -Djavax.net.ssl.trustStore=/data/truststore.jks'
@@ -146,6 +162,11 @@ spec:
             value: 'false'
           - name: SPRING_PROFILES_ACTIVE
             value: 'postgres'
+          - name: HMRC_SERVICE_AUTH
+            valueFrom:
+              secretKeyRef:
+                name: pttg-hmrc-service-secrets
+                key: pttg_rps_api
           - name: PTTG_DB_HOSTNAME
             valueFrom:
               secretKeyRef:
